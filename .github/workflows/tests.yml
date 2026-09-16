@@ -1,0 +1,31 @@
+name: Testes públicos
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Obter o repositório
+        uses: actions/checkout@v7
+
+      - name: Configurar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências de teste
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Executar testes públicos
+        run: python -m pytest -q
+
