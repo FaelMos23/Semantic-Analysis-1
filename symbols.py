@@ -1,8 +1,7 @@
-"""Estruturas fundamentais para símbolos e escopos da MicroC.
+"""Contrato fixo de símbolos e escopos da MicroC.
 
-Os campos formam o contrato usado pelos metadados da AST. O grupo pode
-acrescentar métodos, subclasses e estruturas auxiliares sem alterar esses
-campos públicos.
+Não altere este arquivo. Crie estruturas e operações auxiliares nos módulos das
+passagens quando precisar de outra organização interna.
 """
 
 from __future__ import annotations

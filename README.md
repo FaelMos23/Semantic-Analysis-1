@@ -20,10 +20,11 @@ interface publicada para a AST e não devem ter seus nomes ou campos alterados.
 - `runner.py`: pipeline completo até a Análise Semântica 1;
 - `tests/`: testes públicos e pequenos programas MicroC.
 
-Os métodos e classes auxiliares usados internamente são escolha do grupo. As
-estruturas fornecidas podem ser ampliadas, mas os campos públicos, categorias
-de erro e chaves de metadados descritos no enunciado formam a interface da
-etapa.
+Os métodos e classes auxiliares usados internamente são escolha do grupo. Não
+altere `symbols.py` nem `semantic_errors.py`: esses dois arquivos são contratos
+fechados que serão reutilizados nas próximas etapas. Crie estruturas auxiliares
+em outros módulos. As categorias de erro e chaves de metadados descritas no
+enunciado também formam a interface da etapa.
 
 ## Ambiente e execução
 

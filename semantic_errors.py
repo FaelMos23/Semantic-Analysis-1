@@ -1,3 +1,5 @@
+"""Contrato fixo dos diagnósticos semânticos. Não altere este arquivo."""
+
 from __future__ import annotations
 
 import enum
