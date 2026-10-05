@@ -19,8 +19,6 @@ from ast_nodes import (
     
     BinaryExpr,
     UnaryExpr,
-    
-    IntLiteral,
 )
 
 import semantic_errors as se
@@ -118,6 +116,7 @@ def resolve_names(program: Program) -> None:
     # 4. Anote declarações, usos e blocos na AST.
 
     # apenas 'IfStmt' e 'WhileStmt' possuem blocos
+    # existem também blocos internos
 
     # procura resolução do nome no escopo atual, se não encontrar sobre para escopos-pais
     def find_var(name, scope) -> Symbol | None:
@@ -157,30 +156,12 @@ def resolve_names(program: Program) -> None:
                 func_sym = functs_symb[functs_name.index(expr.name)]
 
                 # adicionando info aos metadados
+                # (a aridade é validada na verificação de tipos, junto com os argumentos)
                 expr.metadata["symbol"] = func_sym
-                
-                # verificar se quantidade de argumentos passados é igual a quantidade de parâmetros requisitados = aridade
-                if len(expr.arguments) != len(func_sym.parameter_types):
-                    erros.append(se.SemanticDiagnostic(
-                        se.SemanticErrorKind.ARITY_MISMATCH,
-                        f"Número incorreto de argumentos fornecido, n° de argumentos passados: {len(expr.arguments)}, n° de argumentos requisitados: {len(func_sym.parameter_types)}",
-                        span=expr.span
-                    ))
 
             # recursivamente checa argumentos, para casos como 'dobro(dobro(4))'
             for arg in expr.arguments:
                 visit_expr(arg, scope)
-
-        elif type(expr) == IntLiteral:
-            # checar limite de valor inteiro (apenas positivo pois o menos não faz parte de IntLiteral)
-            if expr.value > 9223372036854775807:
-                erros.append(se.SemanticDiagnostic(
-                    se.SemanticErrorKind.INTEGER_LITERAL_OUT_OF_RANGE,
-                    "Literal inteiro fora dos limites permitidos",
-                    span=expr.span
-                ))
-
-        # sem ações para BoolLiteral 
 
         elif type(expr) == BinaryExpr:
             visit_expr(expr.left, scope)
@@ -201,13 +182,7 @@ def resolve_names(program: Program) -> None:
         # parâmetros
         if params:
             for p in params:
-                if p.type == TypeName.VOID:
-                    erros.append(se.SemanticDiagnostic(
-                            se.SemanticErrorKind.VOID_PARAMETER,
-                            f"O parâmetro {p.name} não pode ser \'void\'",
-                            span= p.span
-                        ))
-
+                # 'void' em parâmetro é verificado no type_checker
                 sym = Symbol(
                     p.name, 
                     SymbolKind.PARAMETER, 
@@ -238,12 +213,7 @@ def resolve_names(program: Program) -> None:
                         f"A variável {s.name} já foi previamente declarada",
                         span=s.span
                     ))
-                if s.type == TypeName.VOID:
-                    erros.append(se.SemanticDiagnostic(
-                        se.SemanticErrorKind.VOID_VARIABLE,
-                        f"A variável {s.name} não pode ser \'void\'",
-                        span=s.span
-                    ))
+                # 'void' em variável é verificado no type_checker
 
                 sym = Symbol(
                     s.name, 
@@ -285,24 +255,16 @@ def resolve_names(program: Program) -> None:
                     if hasattr(item, 'span'): # tomando cuidado para lidar com expressões, não strings
                         visit_expr(item, curr_scope)
 
-            # verifica o if, seu bloco e o bloco de else, se houver 
-            elif type(s) == IfStmt:
-                visit_expr(s.condition, curr_scope)
-                check_block(None, s.then_block, curr_scope)
-                if s.else_block:
-                    check_block(None, s.else_block, curr_scope)
-
-            # verifica o while e seu bloco
-            elif type(s) == WhileStmt:
-                visit_expr(s.condition, curr_scope)
-                check_block(None, s.body, curr_scope)
+            elif type(s) == Block:
+                # blocos internos recebem um novo escopo filho do escopo atual
+                check_block(None, s, curr_scope)
         
         # adicionar metadado do escopo ao bloco atual, com todas as definições
         bl.metadata["scope"] = curr_scope
 
     
     for f in functs:
-        check_block(f.parameters, f.body, global_scope)
+        check_block(f.parameters, f.body, None)
 
 
 
